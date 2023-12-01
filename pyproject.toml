@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "finetuner"
+version = "0.0.1"
+authors = ["Luca Beetz <luca.beetz@fau.de>"]
+description = "Automatically gather training data for finetuning LLMs"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+openai = "^1.3.6"
+
+[tool.poetry.group.dev.dependencies]
+python-dotenv = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
