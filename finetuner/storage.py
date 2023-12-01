@@ -15,7 +15,7 @@ class FileStorage(Storage):
     file_path: str
 
     def append_completion(self, input_kwargs: dict, completion: str):
-        # read json from file if it exist
+        # read json from file if it exists
         completions = []
         if not os.path.exists(self.file_path):
             completions = []
