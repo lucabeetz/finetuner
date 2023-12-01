@@ -7,7 +7,7 @@ from finetuner.storage import FileStorage
 load_dotenv()
 
 storage = FileStorage(file_path="search_classifier.json")
-client = OpenAI(storage=storage)
+client = OpenAI(storage=storage, use_anyscale=True)
 
 search_classifier_template = """You are helping an AI assistant decide whether a google search for real-time information is necessary to correctly answer a user's query.
 For this, you have to output either 'Y' or 'N' depending on the user query below.
@@ -22,7 +22,7 @@ def search_classifier(user_input: str) -> str | None:
 
     chat_completion = client.chat.completions.create(
         messages=[{"role": "user", "content": formatted_template}],
-        model="gpt-3.5-turbo",
+        model="meta-llama/Llama-2-7b-chat-hf",
     )
 
     result = chat_completion.choices[0].message.content

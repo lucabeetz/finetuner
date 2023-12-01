@@ -1,6 +1,8 @@
-from typing import Mapping, Union, Optional
+import os
+from typing import Mapping, Optional, Union
 
 import httpx
+from ._constants import ANYSCALE_BASE_URL
 from openai import OpenAI, Timeout
 from openai._constants import DEFAULT_MAX_RETRIES
 from openai._types import NOT_GIVEN, NotGiven
@@ -50,7 +52,17 @@ class OpenAIWrapper(OpenAI):
         default_headers: Mapping[str, str] | None = None,
         default_query: Mapping[str, object] | None = None,
         http_client: httpx.Client | None = None,
+        use_anyscale: bool = False,
     ):
+        if use_anyscale:
+            base_url = ANYSCALE_BASE_URL
+            try:
+                api_key = os.environ["ANYSCALE_API_KEY"]
+            except KeyError:
+                raise ValueError(
+                    "You must set the ANYSCALE_API_KEY environment variable to use Anyscale's API."
+                )
+
         super().__init__(
             api_key=api_key,
             organization=organization,

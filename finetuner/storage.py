@@ -29,7 +29,10 @@ class FileStorage(Storage):
 
         completions.append(
             {
-                "input_kwargs": input_kwargs,
+                "input_kwargs": {
+                    "messages": input_kwargs["messages"],
+                    "model": input_kwargs["model"],
+                },
                 "completion": completion,
             }
         )
