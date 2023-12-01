@@ -10,40 +10,41 @@ from openai.resources import Chat
 from openai.resources.chat.completions import Completions
 from openai.types.chat import ChatCompletion
 
-from finetuner.storage import Storage
+from finetuner.dataset import Dataset
 
 
 class CompletionsWrapper(Completions):
-    storage: Optional[Storage]
+    dataset: Optional[Dataset]
 
-    def __init__(self, client: OpenAI, storage: Optional[Storage]) -> None:
+    def __init__(self, client: OpenAI, dataset: Optional[Dataset]) -> None:
         super().__init__(client)
-        self.storage = storage
+        self.dataset = dataset
 
     def create(self, *args, **kwargs) -> ChatCompletion:
         chat_completion = super().create(*args, **kwargs)
 
         res = chat_completion.choices[0].message.content
-        if self.storage and res:
-            self.storage.append_completion(kwargs, res)
+        if self.dataset is not None and res:
+            self.dataset.append_completion(kwargs, res)
+            self.dataset.save()
 
         return chat_completion
 
 
 class ChatWrapper(Chat):
-    def __init__(self, client: OpenAI, storage: Optional[Storage]) -> None:
+    def __init__(self, client: OpenAI, dataset: Optional[Dataset]) -> None:
         super().__init__(client)
-        self.completions = CompletionsWrapper(client, storage)
+        self.completions = CompletionsWrapper(client, dataset)
 
 
 class OpenAIWrapper(OpenAI):
     chat: ChatWrapper
-    storage: Optional[Storage]
+    storage: Optional[Dataset]
 
     def __init__(
         self,
         *,
-        storage: Optional[Storage] = None,
+        dataset: Optional[Dataset] = None,
         api_key: str | None = None,
         organization: str | None = None,
         base_url: str | httpx.URL | None = None,
@@ -73,6 +74,5 @@ class OpenAIWrapper(OpenAI):
             default_query=default_query,
             http_client=http_client,
         )
-        self.storage = storage
-
-        self.chat = ChatWrapper(self, self.storage)
+        self.dataset = dataset
+        self.chat = ChatWrapper(self, self.dataset)

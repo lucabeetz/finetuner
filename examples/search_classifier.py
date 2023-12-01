@@ -2,12 +2,12 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 
 from finetuner import OpenAI
-from finetuner.storage import FileStorage
+from finetuner.dataset import FileDataset
 
 load_dotenv()
 
-storage = FileStorage(file_path="search_classifier.json")
-client = OpenAI(storage=storage, use_anyscale=True)
+dataset = FileDataset(file_path="search_classifier.json")
+client = OpenAI(dataset=dataset, use_anyscale=True)
 
 search_classifier_template = """You are helping an AI assistant decide whether a google search for real-time information is necessary to correctly answer a user's query.
 For this, you have to output either 'Y' or 'N' depending on the user query below.
