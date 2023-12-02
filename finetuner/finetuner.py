@@ -39,15 +39,14 @@ class Finetuner(BaseModel):
         except Exception as e:
             print(f"Error during dataset upload: {e}")
 
-        finally:
-            if temp_file_path and temp_file_path.exists():
-                temp_file_path.unlink()
-
-    def start_job(self, model: str, file_id: str) -> FineTuningJob:
+    def start_job(
+        self, model: str, train_file_id: str, val_file_id: Optional[str]
+    ) -> FineTuningJob:
         """Start the finetuning job"""
         job = self.client.fine_tuning.jobs.create(
             model=model,
-            training_file=file_id,
+            training_file=train_file_id,
+            validation_file=val_file_id,
         )
         print(f"Started job: {job.id}")
         return job
