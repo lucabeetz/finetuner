@@ -16,20 +16,20 @@ dataset = FileDataset(file_path="search_classifier.json")
 client = Client.for_openai(dataset=dataset)
 ```
 
-After creating a dataset, you can start a finetuning job (using [Anyscale](https://www.anyscale.com/)) with the `Finetuner` class by passing the `Dataset` you want to finetune on to `start_job()`.
+After creating a dataset, you can start a finetuning job (using [Anyscale](https://www.anyscale.com/)) with the `Finetuner` class by uploading the `Dataset` and then passing its id along with the base model to `start_job()`.
 
 ```python
 from finetuner import OpenAI
 from finetuner.dataset import FileDataset
-from finetuner.finetune import Finetuner
+from finetuner.finetuner import Finetuner
 
 client = Client.for_anyscale()
 
-# Load previously created dataset
 dataset = FileDataset.from_file("search_classifier.json")
-finetune = Finetune(model="meta-llama/Llama-2-7b-chat-hf", client=client)
+finetuner = Finetuner(client=client)
 
-finetune.start_job(dataset)
+dataset_id = finetuner.upload_dataset(dataset)
+job = finetuner.start_job("meta-llama/Llama-2-7b-chat-hf", dataset_id)
 ```
 
 ## TODO and ideas

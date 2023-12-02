@@ -1,27 +1,22 @@
 import json
 import uuid
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
-from pydantic import BaseModel
 from openai.types.fine_tuning import FineTuningJob
+from pydantic import BaseModel
 
 from finetuner import Client
 from finetuner.dataset import Dataset
 
 
-class Finetune(BaseModel):
-    model: str
-    dataset: Dataset
+class Finetuner(BaseModel):
     client: Client
-
-    file_id: Optional[str] = None
-    job: Optional[FineTuningJob] = None
 
     class Config:
         arbitrary_types_allowed = True
 
-    def _upload_dataset(self, dataset: Dataset):
+    def upload_dataset(self, dataset: Dataset) -> Optional[str]:
         """Upload the dataset to the finetuning endpoint"""
 
         temp_file_path = None
@@ -38,9 +33,9 @@ class Finetune(BaseModel):
 
             with temp_file_path.open("rb") as file:
                 uploaded_file = self.client.files.create(file=file, purpose="fine-tune")
-                self.file_id = uploaded_file.id
+                print(f"Uploaded dataset: {uploaded_file.id}")
+                return uploaded_file.id
 
-            print(f"Uploaded dataset: {self.file_id}")
         except Exception as e:
             print(f"Error during dataset upload: {e}")
 
@@ -48,23 +43,14 @@ class Finetune(BaseModel):
             if temp_file_path and temp_file_path.exists():
                 temp_file_path.unlink()
 
-    def start_job(self, dataset: Dataset):
+    def start_job(self, model: str, file_id: str) -> FineTuningJob:
         """Start the finetuning job"""
-        self._upload_dataset(dataset)
-
-        if not self.file_id:
-            raise ValueError("Dataset not uploaded")
-        self.job = self.client.fine_tuning.jobs.create(
-            model=self.model,
-            training_file=self.file_id,
+        job = self.client.fine_tuning.jobs.create(
+            model=model,
+            training_file=file_id,
         )
-        print(f"Started job: {self.job.id}")
+        print(f"Started job: {job.id}")
+        return job
 
-    def print_status(self):
-        """Print the status of the finetuning job"""
-
-        if self.job:
-            job = self.client.fine_tuning.jobs.retrieve(self.job.id)
-            print(f"Job status: {job.status}")
-        else:
-            print("No job started")
+    def list_jobs(self) -> List[FineTuningJob]:
+        return list(self.client.fine_tuning.jobs.list())
