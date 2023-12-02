@@ -25,6 +25,15 @@ class Dataset(ABC, BaseModel):
     def __len__(self) -> int:
         pass
 
+    def to_finetuning_format(self) -> List[dict]:
+        formatted_completions = []
+        for completion in self.completions:
+            messages = completion["input_kwargs"]["messages"]
+            # for finetuning we have to add the completion as an assistant message
+            messages.append({"role": "assistant", "content": completion["completion"]})
+            formatted_completions.append({"messages": messages})
+        return formatted_completions
+
 
 class FileDataset(Dataset):
     file_path: str
