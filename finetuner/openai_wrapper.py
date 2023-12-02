@@ -10,36 +10,39 @@ from openai.resources import Chat
 from openai.resources.chat.completions import Completions
 from openai.types.chat import ChatCompletion
 
-from finetuner.dataset import Dataset
+from finetuner.storage import Storage
 
 
 class CompletionsWrapper(Completions):
-    dataset: Optional[Dataset]
+    storage: Optional[Storage]
 
-    def __init__(self, client: OpenAI, dataset: Optional[Dataset]) -> None:
+    def __init__(self, client: OpenAI, storage: Optional[Storage]) -> None:
         super().__init__(client)
-        self.dataset = dataset
+        self.storage = storage
 
     def create(self, *args, **kwargs) -> ChatCompletion:
+        dataset_name = kwargs.pop("dataset_name", None)
         chat_completion = super().create(*args, **kwargs)
 
+        if not dataset_name:
+            print("No dataset name provided")
+
         res = chat_completion.choices[0].message.content
-        if self.dataset is not None and res:
-            self.dataset.append_completion(kwargs, res)
-            self.dataset.save()
+        if self.storage and dataset_name is not None and res:
+            self.storage.append_to_dataset(dataset_name, kwargs, res)
 
         return chat_completion
 
 
 class ChatWrapper(Chat):
-    def __init__(self, client: OpenAI, dataset: Optional[Dataset]) -> None:
+    def __init__(self, client: OpenAI, storage: Optional[Storage]) -> None:
         super().__init__(client)
-        self.completions = CompletionsWrapper(client, dataset)
+        self.completions = CompletionsWrapper(client, storage)
 
 
 class OpenAIWrapper(OpenAI):
     chat: ChatWrapper
-    storage: Optional[Dataset]
+    storage: Optional[Storage]
 
     @classmethod
     def for_openai(cls, **kwargs):
@@ -52,7 +55,7 @@ class OpenAIWrapper(OpenAI):
     def __init__(
         self,
         *,
-        dataset: Optional[Dataset] = None,
+        storage: Optional[Storage] = None,
         api_key: str | None = None,
         organization: str | None = None,
         base_url: str | httpx.URL | None = None,
@@ -82,5 +85,5 @@ class OpenAIWrapper(OpenAI):
             default_query=default_query,
             http_client=http_client,
         )
-        self.dataset = dataset
-        self.chat = ChatWrapper(self, self.dataset)
+        self.storage = storage
+        self.chat = ChatWrapper(self, self.storage)
