@@ -19,7 +19,7 @@ class Eval(ABC, BaseModel):
     def compare(self, prediction: str, target: str) -> bool:
         pass
 
-    def get_prediction(
+    def _get_prediction(
         self, model: str, messages: List[ChatCompletionMessageParam], **kwargs
     ) -> Optional[str]:
         chat_completion = self.client.chat.completions.create(
@@ -39,7 +39,7 @@ class Eval(ABC, BaseModel):
         correct = 0
         for sample in tqdm(dataset):
             messages = sample["input_kwargs"]["messages"]
-            prediction = self.get_prediction(model, messages, **kwargs)
+            prediction = self._get_prediction(model, messages, **kwargs)
             if prediction is None:
                 continue
             if self.compare(prediction, sample["completion"]):
