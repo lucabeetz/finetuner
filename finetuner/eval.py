@@ -20,20 +20,33 @@ class Eval(ABC, BaseModel):
         pass
 
     def get_prediction(
-        self, model: str, messages: List[ChatCompletionMessageParam]
+        self, model: str, messages: List[ChatCompletionMessageParam], **kwargs
     ) -> Optional[str]:
         chat_completion = self.client.chat.completions.create(
             messages=messages,
             model=model,
+            **kwargs,
         )
         return chat_completion.choices[0].message.content
 
-    def run(self, model: str, dataset: Dataset) -> float:
+    def run(
+        self, model: str, dataset: Dataset, verbose: bool = False, **kwargs
+    ) -> Optional[float]:
+        if not dataset:
+            print("The dataset is empty")
+            return
+
         correct = 0
         for sample in tqdm(dataset):
-            prediction = self.get_prediction(model, sample["input_kwargs"]["messages"])
+            messages = sample["input_kwargs"]["messages"]
+            prediction = self.get_prediction(model, messages, **kwargs)
             if prediction is None:
                 continue
             if self.compare(prediction, sample["completion"]):
                 correct += 1
-        return correct / len(dataset)
+            if verbose:
+                print(f"Prediction: {prediction} - Target: {sample['completion']}")
+        acc = correct / len(dataset)
+        if verbose:
+            print(f"Accuracy: {acc}")
+        return acc
