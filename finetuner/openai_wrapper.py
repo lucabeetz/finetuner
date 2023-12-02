@@ -41,6 +41,14 @@ class OpenAIWrapper(OpenAI):
     chat: ChatWrapper
     storage: Optional[Dataset]
 
+    @classmethod
+    def for_openai(cls, **kwargs):
+        return cls(**kwargs)
+
+    @classmethod
+    def for_anyscale(cls, **kwargs):
+        return cls(use_anyscale=True, **kwargs)
+
     def __init__(
         self,
         *,

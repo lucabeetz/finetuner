@@ -6,14 +6,14 @@ from typing import Optional
 from pydantic import BaseModel
 from openai.types.fine_tuning import FineTuningJob
 
-from finetuner import OpenAI
+from finetuner import Client
 from finetuner.dataset import Dataset
 
 
 class Finetune(BaseModel):
     model: str
     dataset: Dataset
-    client: OpenAI
+    client: Client
 
     file_id: Optional[str] = None
     job: Optional[FineTuningJob] = None
@@ -21,16 +21,12 @@ class Finetune(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    def _validate_dataset(self):
-        pass
-
-    def upload_dataset(self):
+    def _upload_dataset(self, dataset: Dataset):
         """Upload the dataset to the finetuning endpoint"""
 
         temp_file_path = None
         try:
-            self._validate_dataset()
-            formatted_dataset = self.dataset.to_finetuning_format()
+            formatted_dataset = dataset.to_finetuning_format()
 
             temp_dir = Path(".finetuner")
             temp_dir.mkdir(exist_ok=True)
@@ -52,8 +48,9 @@ class Finetune(BaseModel):
             if temp_file_path and temp_file_path.exists():
                 temp_file_path.unlink()
 
-    def start_job(self):
+    def start_job(self, dataset: Dataset):
         """Start the finetuning job"""
+        self._upload_dataset(dataset)
 
         if not self.file_id:
             raise ValueError("Dataset not uploaded")
