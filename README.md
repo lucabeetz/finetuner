@@ -18,14 +18,14 @@ storage = FileStorage(directory="example_finetune")
 client = Client.for_openai(storage=storage)
 ```
 
-Now, when chat completion calls, you provide a `dataset_name` to set which dataset this inference should be added to. This is necessary to keep track of multiple different prompts.
+Now, when making chat completion calls, you provide a `dataset_name` to set which dataset this inference should be added to. This is necessary to keep track of multiple different prompts.
 
 ```python
 chat_completion = client.chat.completions.create(
-    dataset_name="search_classifier",
     messages=[{"role": "user", "content": formatted_template}],
     model="gpt-4",
     temperature=0,
+    dataset_name="search_classifier",
 )
 ```
 
@@ -59,10 +59,12 @@ val_file_id = finetuner.upload_dataset(val_dataset)
 job = finetuner.start_job("meta-llama/Llama-2-7b-chat-hf", train_file_id, val_file_id)
 ```
 
+You can check job status with `job.status`. It usually takes around 10-20min depending on the size and anyscale sends you an email when the job finishes or fails.
+
 ### Running evaluation
 
 finetuner also provides an `Eval` class to evaluate the performance of models on datasets.
-To use it, simply subclass it and implement `compare` to compare the model output with ground truth data.
+To use it, simply subclass it and implement the `compare` method.
 Often this might just be an equality operator with some string formatting but for more complex tasks you could use an LLM call for evaluation.
 
 ```python
@@ -74,7 +76,7 @@ class ClassificationEval(Eval):
 
 # Eval result is accuracy
 eval = ClassificationEval(client)
-eval.run("meta-llama/Llama-2-7b-chat-h", val_dataset)
+eval.run("meta-llama/Llama-2-7b-chat-h", val_dataset, temperature=0)
 ```
 
 
