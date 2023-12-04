@@ -24,11 +24,12 @@ class CompletionsWrapper(Completions):
         dataset_name = kwargs.pop("dataset_name", None)
         chat_completion = super().create(*args, **kwargs)
 
-        if not dataset_name:
-            print("No dataset name provided")
+        if self.storage and not dataset_name:
+            print("Storage is set but no dataset name was provided.")
+            return chat_completion
 
         res = chat_completion.choices[0].message.content
-        if self.storage and dataset_name is not None and res:
+        if self.storage and dataset_name and res:
             self.storage.append_to_dataset(dataset_name, kwargs, res)
 
         return chat_completion
